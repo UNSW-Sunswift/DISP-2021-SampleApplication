@@ -1,0 +1,17 @@
+[package]
+name = "backend"
+version = "0.1.0"
+authors = ["Tom Kunc <t.kunc@unsw.edu.au>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+rust-embed = "5.1.0"
+web-view = { version = "0.7.3" }
+serde = "1.0"
+envy = "0.4.2"
+serde_derive = "1.0"
+serde_json = "1.0"
+syslog = "5.0.0"
+log = "0.4.14"
