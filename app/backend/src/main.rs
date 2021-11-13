@@ -16,7 +16,7 @@ use std::panic;
 
 use web_view::*;
 
-const APP_NAME = "MyApp";
+const APP_NAME: &str = "MyApp";
 
 /// This struct should contain any state that you
 /// need to remember from one button-press to another.
@@ -47,7 +47,7 @@ pub enum Cmd {
 /// This actually creates the frontend. This already contains the
 /// settings you'll need from the webview::builder, you can find
 /// more details in the webview documentation
-fn create_webview(apps: Arc<Mutex<ScreenState>>) -> web_view::WebView<'static, ()> {
+fn create_webview(apps: Arc<Mutex<AppState>>) -> web_view::WebView<'static, ()> {
     let mut webview = web_view::builder()
         .title(APP_NAME)
         .content(Content::Html(get_html()))
@@ -67,7 +67,6 @@ fn create_webview(apps: Arc<Mutex<ScreenState>>) -> web_view::WebView<'static, (
                 },
                 Cmd::Log { text } => info!("{}", text),
             };
-            screen_daemon(apps.clone(), true).expect("Running daemon should be OK");
             Ok(())
         })
         .build()
