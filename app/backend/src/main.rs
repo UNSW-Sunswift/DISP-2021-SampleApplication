@@ -31,7 +31,12 @@ struct AppState {
 /// the backend. Each entry in this allows the frontend
 /// to communicate with the backend. You may need to add
 /// more, or rename these.
+// The derive here means we can convert this enum from a
+// JSON object to a Rust struct.
 #[derive(Deserialize)]
+// This means that if we get an object like
+// {cmd: "someAction"}, we convert that into
+// an enum Cmd::SomeAction
 #[serde(tag = "cmd", rename_all = "camelCase")]
 pub enum Cmd {
     /// Here is an action you can take from the frontend.
