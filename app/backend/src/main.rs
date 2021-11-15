@@ -8,9 +8,10 @@ extern crate web_view;
 
 use syslog::{Facility, Formatter3164, BasicLogger};
 use log::{LevelFilter};
-use serde::{Deserialize, Serialize};
+//use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex};
-use std::thread;
+//use std::thread;
+use std::process::{Command};
 
 use std::panic;
 
@@ -22,10 +23,13 @@ const APP_NAME: &str = "MyApp";
 /// need to remember from one button-press to another.
 /// You may need to change this to store your own
 /// data.
-struct AppState {
-    your_data_here: ()
+struct HeadlightState {
+    left_indicator_state: bool,
+    right_indicator_state: bool,
+    day_running_lights_state: bool,
+    low_beam_state: bool,
+    high_beam_state: bool,
 }
-
 
 /// These are the way that the frontend communicates with
 /// the backend. Each entry in this allows the frontend
@@ -34,20 +38,31 @@ struct AppState {
 #[derive(Deserialize)]
 #[serde(tag = "cmd", rename_all = "camelCase")]
 pub enum Cmd {
-    /// Here is an action you can take from the frontend.
-    Init,
-    /// Here is another actino.
-    SomeAction,
-    /// Here is an action, but you can also pass along
-    /// a string with it.
-    Log { text: String },
-}
+    Init, //i
+    LeftIndicator, //li
+    RightIndicator, //ri
+    DaylightRunningLights, //do
+    LowBeam, //lb
+    HighBeam, //hb
+    AllOff, //cl
+} 
 
+impl Default for HeadlightState {
+    fn default () -> HeadlightState {
+        HeadlightState {
+            left_indicator_state : false,
+            right_indicator_state : false,
+            day_running_lights_state : false,
+            low_beam_state : false,
+            high_beam_state : false,
+        }
+    }
+}
 
 /// This actually creates the frontend. This already contains the
 /// settings you'll need from the webview::builder, you can find
 /// more details in the webview documentation
-fn create_webview(apps: Arc<Mutex<AppState>>) -> web_view::WebView<'static, ()> {
+fn create_webview(apps: Arc<Mutex<HeadlightState>>) -> web_view::WebView<'static, ()> {
     let mut webview = web_view::builder()
         .title(APP_NAME)
         .content(Content::Html(get_html()))
@@ -61,11 +76,86 @@ fn create_webview(apps: Arc<Mutex<AppState>>) -> web_view::WebView<'static, ()> 
             // Your job here is to deal with the relevant
             // RPC.
             match serde_json::from_str(arg).unwrap() {
-                Cmd::Init => (),
-                Cmd::SomeAction => {
-                    info!("This will perform some action.");
+                Cmd::Init => {
+                    println!("____INIT____");
+                    HeadlightState::default();
+                    println!(HeadlightState{});
+                    let process = Command::new("python3 src/embd_headlights_tool/audi_cmd_line.py")
+                            //.arg("/dev/cu.Bluetooth-Incoming-Port")
+                            .arg("i")
+                            .spawn()
+                            .expect("failed to execute process 'Initialise Headlights'");
+                    Some(process);
+                    let mut cur_headlight_state = apps.lock().unwrap();
+                    cur_headlight_state.init = true;
+                    println!("hello there!");
                 },
-                Cmd::Log { text } => info!("{}", text),
+                Cmd::LeftIndicator => {
+                    println!("__LEFT__");
+                    let process = Command::new("python3 src/embd_headlights_tool/audi_cmd_line.py")
+                            //.arg("/dev/cu.Bluetooth-Incoming-Port")
+                            .arg("li")
+                            .spawn()
+                            .expect("failed to execute process 'Left Indicator'");
+                    Some(process);
+                    let mut cur_headlight_state = apps.lock().unwrap();
+                    cur_headlight_state.left_indicator_state = true;
+                }
+                Cmd::RightIndicator => {
+                    println!("__RIGHT__");
+                    let process = Command::new("python3 src/embd_headlights_tool/audi_cmd_line.py")
+                            .arg("/dev/cu.Bluetooth-Incoming-Port")
+                            .arg("ri")
+                            .spawn()
+                            .expect("failed to execute process 'Right indicator'");
+                    Some(process);
+                    let mut cur_headlight_state = apps.lock().unwrap();
+                    cur_headlight_state.right_indicator_state = true;
+                },
+                Cmd::DaylightRunningLights => {
+                    println!("__DAY__");
+                    let process = Command::new("python3 src/embd_headlights_tool/audi_cmd_line.py")
+                            .arg("/dev/cu.Bluetooth-Incoming-Port")
+                            .arg("do")
+                            .spawn()
+                            .expect("failed to execute process 'Daylight running lights'");
+                    Some(process);                    
+                    let mut cur_headlight_state = apps.lock().unwrap();
+                    cur_headlight_state.day_running_lights_state = true;
+                },
+                Cmd::LowBeam => {
+                    println!("__LOW__");
+                    let process = Command::new("python3 src/embd_headlights_tool/audi_cmd_line.py")
+                            .arg("/dev/cu.Bluetooth-Incoming-Port")
+                            .arg("lb")
+                            .spawn()
+                            .expect("failed to execute process 'low beam lights'");
+                    Some(process);
+                    let mut cur_headlight_state = apps.lock().unwrap();
+                    cur_headlight_state.low_beam_state = true;
+                },
+                Cmd::HighBeam => {
+                    println!("__HIGH__");
+                    let process = Command::new("python3 src/embd_headlights_tool/audi_cmd_line.py")
+                            .arg("/dev/cu.Bluetooth-Incoming-Port")
+                            .arg("hb")
+                            .spawn()
+                            .expect("failed to execute process 'high beam lights'");
+                    Some(process);
+                    let mut cur_headlight_state = apps.lock().unwrap();
+                    cur_headlight_state.high_beam_state = true;
+                },
+                Cmd::AllOff => {
+                    println!("__OFF__");
+                    let process = Command::new("python3 src/embd_headlights_tool/audi_cmd_line.py")
+                            .arg("/dev/cu.Bluetooth-Incoming-Port")
+                            .arg("cl")
+                            .spawn()
+                            .expect("failed to execute process 'all off'");
+                    Some(process);
+                    let mut cur_headlight_state = apps.lock().unwrap();
+                    cur_headlight_state.all_off_state = true;
+                },
             };
             Ok(())
         })
@@ -107,9 +197,7 @@ fn create_formatter() {
 fn main() {
     create_formatter();
 
-    let data = Arc::new(Mutex::new(AppState {
-        your_data_here: ()
-    }));
+    let data = Arc::new(Mutex::new(HeadlightState::default()));
 
     create_webview(data).run().unwrap();
 
